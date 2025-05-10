@@ -32,7 +32,6 @@ public class JCanny {
      * @return edges            A binary image of the edges in the input image.
      */
     public static BufferedImage CannyEdges(BufferedImage image, int numberDeviations, double fract) {
-        BufferedImage edges = null;
         numDev = numberDeviations;
         tFract = fract;
 
@@ -47,9 +46,7 @@ public class JCanny {
         Direction();    // Find the gradient direction at each pixel
         Suppression();  // Using the direction and magnitude images, identify candidate points
 
-        edges = ImageUtils.GSImg(Hysteresis());
-
-        return edges;
+        return ImageUtils.GSImg(Hysteresis());
     }
 
     // Send this method the horizontal and vertical Sobel convolutions to create the gradient magnitude image
@@ -91,23 +88,23 @@ public class JCanny {
 
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
-                double angle = Math.atan2(gy[r][c], gx[r][c]) * piRad;    //Convert radians to degrees
+                double angle = Math.atan2(gy[r][c], gx[r][c]) * piRad; // Convert radians to degrees
 
-                //Check for negative angles
+                // Check for negative angles
                 if (angle < 0) {
                     angle += 360.;
                 }
 
-                //Each pixels ACTUAL angle is examined and placed in 1 of four groups (for the four searched 45-degree neighbors)
-                //Reorder this for optimization
+                // Each pixels ACTUAL angle is examined and placed in 1 of four groups (for the four searched 45-degree neighbors)
+                // Reorder this for optimization
                 if (angle <= 22.5 || (angle >= 157.5 && angle <= 202.5) || angle >= 337.5) {
-                    dir[r][c] = 0;      //Check left and right neighbors
+                    dir[r][c] = 0; // Check left and right neighbors
                 } else if ((angle >= 22.5 && angle <= 67.5) || (angle >= 202.5 && angle <= 247.5)) {
-                    dir[r][c] = 45;     //Check diagonal (upper right and lower left) neighbors
+                    dir[r][c] = 45; // Check diagonal (upper right and lower left) neighbors
                 } else if ((angle >= 67.5 && angle <= 112.5) || (angle >= 247.5 && angle <= 292.5)) {
-                    dir[r][c] = 90;     //Check top and bottom neighbors
+                    dir[r][c] = 90; // Check top and bottom neighbors
                 } else {
-                    dir[r][c] = 135;    //Check diagonal (upper left and lower right) neighbors
+                    dir[r][c] = 135; // Check diagonal (upper left and lower right) neighbors
                 }
             }
         }
@@ -161,8 +158,8 @@ public class JCanny {
         double tHi;      // Hysteresis high threshold; Definitely edge pixels, do not examine
         double tLo;      // Hysteresis low threshold; possible edge pixel, examine further.
 
-        tHi = mean + (numDev * stDev);    //Magnitude greater than or equal to high threshold is an edge pixel
-        tLo = tHi * tFract;               //Magnitude less than low threshold not an edge, equal or greater possible edge
+        tHi = mean + (numDev * stDev);    // Magnitude greater than or equal to high threshold is an edge pixel
+        tLo = tHi * tFract;               // Magnitude less than low threshold not an edge, equal or greater possible edge
 
         for (int r = 1; r < height; r++) {
             for (int c = 1; c < width; c++) {

@@ -17,20 +17,21 @@ public class SplitComicPanel {
 
     private static final int BACKGROUND_COLOR = -16777216;
 
-    private final CannyEdgeDetector detector = new CannyEdgeDetector();
-
-    // With the old method for Canny edge detection, grayscale image is smaller than original image (offset = 9),
-    // but with the new method, two images are equal
-    // TODO: Remove
-    int offset = 9;
+    private final CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();
 
     public static void main(String[] args) throws Exception {
         new SplitComicPanel().run();
     }
 
     public void run() throws Exception {
+        // With the old method for Canny edge detection, grayscale image is smaller than original image (offset = 9),
+        // but with the new method, two images are equal
+        // TODO: Remove
+        int offset = 9;
+        // int offset = 0;
+
         double sigma = 1.4;
-        detector.initGaussianKernel(sigma);
+        cannyEdgeDetector.initGaussianKernel(sigma);
 
         String folder = "/home/lockex1987/new/02/";
         // Sometimes the cover is split in two, I want it's retained
@@ -58,7 +59,7 @@ public class SplitComicPanel {
             rowList = mergeRows(rowList, minimumHeight, continuousRowsGap);
             splitRowsIntoCells(grayscaleImage, rowList, isInfoPage);
             mergeCells(rowList, minimumWidth);
-            createChildImages(originalFileName, image, grayscaleImage, rowList, extension, folder);
+            createChildImages(originalFileName, image, grayscaleImage, rowList, extension, folder, offset);
         }
     }
 
@@ -105,8 +106,8 @@ public class SplitComicPanel {
         // Parameters for Canny edge detection
         double lowThreshold = 10;
         double highThreshold = 30;
-        detector.detectEdges(inputImage, lowThreshold, highThreshold);
-        return detector.getEdgesImage();
+        cannyEdgeDetector.detectEdges(inputImage, lowThreshold, highThreshold);
+        return cannyEdgeDetector.getEdgesImage();
     }
 
     private List<Row> splitIntoRows(BufferedImage grayscaleImage) {
@@ -293,7 +294,10 @@ public class SplitComicPanel {
         }
     }
 
-    private void createChildImages(String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList, String extension, String folder) throws Exception {
+    private void createChildImages(
+        String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList, String extension,
+        String folder, int offset
+    ) throws Exception {
         int numOfCells = 0;
         for (Row row : rowList) {
             numOfCells += row.cellList.size();

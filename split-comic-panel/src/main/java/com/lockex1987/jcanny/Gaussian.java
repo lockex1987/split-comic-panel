@@ -33,7 +33,7 @@ public class Gaussian {
         int width = raw[0].length;
         double norm = 0.;
         double intensSquared2 = 2 * intens * intens;
-        //This also seems very costly, do it as little as possible
+        // This also seems very costly, do it as little as possible
         double invIntensSqrPi = 1 / (SQRT2PI * intens);
         double[] mask = new double[2 * rad + 1];
         int[][] outGS = new int[height - 2 * rad][width - 2 * rad];

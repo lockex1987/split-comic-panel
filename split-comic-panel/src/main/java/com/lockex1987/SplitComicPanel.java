@@ -15,14 +15,22 @@ import java.util.Set;
 
 public class SplitComicPanel {
 
+    private static final int BACKGROUND_COLOR = -16777216;
+
     private final String folder = "/home/lockex1987/new/01/";
 
-    // webp format is not supported
-    private final String extension = ".jpg";
-
-    private final int backgroundColor = -16777216;
+    // Adjust to get optimized values
     private final int minimumHeight = 100;
     private final int minimumWidth = 300;
+
+    // Parameters for Canny edge detection
+    private final double sigma = 1.4;
+    private final double lowThreshold = 10;
+    private final double highThreshold = 30;
+
+    // With the old method for Canny edge detection, grascale image is smaller than original image (offset = 9),
+    // but with the new method, two images are equal
+    int offset = 0;
 
     public static void main(String[] args) throws Exception {
         new SplitComicPanel().run();
@@ -32,11 +40,13 @@ public class SplitComicPanel {
     public void run() throws Exception {
         for (int page = 17; page <= 17; page++) {
             String originalFileName = String.format("%03d", page);
+            // webp format is not supported
+            String extension = ".jpg";
             System.out.println("page: " + page + ", " + originalFileName);
             BufferedImage image = ImageIO.read(new File(folder + originalFileName + extension));
 
-            BufferedImage grayscaleImage = makeGrayscale(image);
-            grayscaleImage = detectEdge(grayscaleImage);
+            // BufferedImage grayscaleImage = makeGrayscale(image);
+            BufferedImage grayscaleImage = detectEdges(image);
             ImageIO.write(grayscaleImage, "jpg", new File(folder + originalFileName + " - grayscale" + extension));
             // inspectColor();
 
@@ -44,7 +54,7 @@ public class SplitComicPanel {
             rowList = mergeRows(rowList);
             splitRowsIntoCells(grayscaleImage, rowList);
             mergeCells(rowList);
-            createChildImages(originalFileName, image, grayscaleImage, rowList);
+            createChildImages(originalFileName, image, grayscaleImage, rowList, extension);
         }
     }
 
@@ -73,12 +83,19 @@ public class SplitComicPanel {
         return grayscaleImage;
     }
 
-    private BufferedImage detectEdge(BufferedImage inputImage) {
+    private BufferedImage detectEdgesOld(BufferedImage inputImage) {
         // https://en.wikipedia.org/wiki/Canny_edge_detector
         // https://github.com/rstreet85/JCanny
         double CANNY_THRESHOLD_RATIO = .2; // Suggested range .2 - .4
         int CANNY_STD_DEV = 1;             // Range 1-3
         return JCanny.CannyEdges(inputImage, CANNY_STD_DEV, CANNY_THRESHOLD_RATIO);
+    }
+
+    // Code from Google Gemini
+    private BufferedImage detectEdges(BufferedImage inputImage) {
+        CannyEdgeDetector detector = new CannyEdgeDetector();
+        detector.detectEdges(inputImage, sigma, lowThreshold, highThreshold);
+        return detector.getEdgesImage();
     }
 
     private List<Row> splitIntoRows(BufferedImage grayscaleImage) {
@@ -139,7 +156,7 @@ public class SplitComicPanel {
                 throw ex;
             }
 
-            if (rgb != backgroundColor) {
+            if (rgb != BACKGROUND_COLOR) {
                 return false;
             }
         }
@@ -149,7 +166,7 @@ public class SplitComicPanel {
     private boolean isBackgroundVertical(int x, int startY, int endY, BufferedImage grayscaleImage) {
         for (int y = startY; y < endY; y++) {
             int rgb = grayscaleImage.getRGB(x, y);
-            if (rgb != backgroundColor) {
+            if (rgb != BACKGROUND_COLOR) {
                 return false;
             }
         }
@@ -236,10 +253,7 @@ public class SplitComicPanel {
         }
     }
 
-    private void createChildImages(String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList) throws Exception {
-        // grascale is smaller than original
-        // System.out.println(image.getWidth() + "x" + image.getHeight() + ", " + grayscaleImage.getWidth() + "x" + grayscaleImage.getHeight());
-        int offset = 9;
+    private void createChildImages(String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList, String extension) throws Exception {
         int count = 1;
         int cuttingFrame = 0;
         for (Row row : rowList) {

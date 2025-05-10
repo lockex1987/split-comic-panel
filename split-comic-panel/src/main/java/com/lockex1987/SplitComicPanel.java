@@ -17,20 +17,9 @@ public class SplitComicPanel {
 
     private static final int BACKGROUND_COLOR = -16777216;
 
-    private final String folder = "/home/lockex1987/new/01/";
-
-    // Adjust to get optimized values
-    private final int minimumWidth = 300;
-    private final int minimumHeight = 100;
-    private final int continuousRowsGap = 15;
-
-    // Parameters for Canny edge detection
-    private final double sigma = 1.4;
-    private final double lowThreshold = 10;
-    private final double highThreshold = 30;
-
-    // With the old method for Canny edge detection, grascale image is smaller than original image (offset = 9),
+    // With the old method for Canny edge detection, grayscale image is smaller than original image (offset = 9),
     // but with the new method, two images are equal
+    // TODO: Remove
     int offset = 0;
 
     public static void main(String[] args) throws Exception {
@@ -38,23 +27,31 @@ public class SplitComicPanel {
     }
 
     public void run() throws Exception {
-        for (int page = 50; page <= 50; page++) {
+        String folder = "/home/lockex1987/new/05/";
+        // Sometimes the cover is split in two, I want it's retained
+        // Start with page 2
+        for (int page = 2; page <= 60; page++) {
             String originalFileName = String.format("%03d", page);
             // webp format is not supported
             String extension = ".jpg";
             System.out.println("page: " + page + ", " + originalFileName);
             BufferedImage image = ImageIO.read(new File(folder + originalFileName + extension));
 
+            // Adjust to get optimized values
+            int minimumHeight = Math.max(image.getHeight() / 10, 100);
+            int minimumWidth = Math.max(image.getWidth() / 10, 200);
+            int continuousRowsGap = 15;
+
             // BufferedImage grayscaleImage = makeGrayscale(image);
             BufferedImage grayscaleImage = detectEdges(image);
-            ImageIO.write(grayscaleImage, "jpg", new File(folder + originalFileName + " - grayscale" + extension));
+            // ImageIO.write(grayscaleImage, "jpg", new File(folder + originalFileName + " - grayscale" + extension));
             // inspectColor();
 
             List<Row> rowList = splitIntoRows(grayscaleImage);
-            rowList = mergeRows(rowList);
+            rowList = mergeRows(rowList, minimumHeight, continuousRowsGap);
             splitRowsIntoCells(grayscaleImage, rowList);
-            mergeCells(rowList);
-            createChildImages(originalFileName, image, grayscaleImage, rowList, extension);
+            mergeCells(rowList, minimumWidth);
+            createChildImages(originalFileName, image, grayscaleImage, rowList, extension, folder);
         }
     }
 
@@ -93,7 +90,14 @@ public class SplitComicPanel {
     }
 
     // Code from Google Gemini
+    // More accurate but run slower than the old method
+    // TODO: Tuning performance
     private BufferedImage detectEdges(BufferedImage inputImage) {
+        // Parameters for Canny edge detection
+        double sigma = 1.4;
+        double lowThreshold = 10;
+        double highThreshold = 30;
+
         CannyEdgeDetector detector = new CannyEdgeDetector();
         detector.detectEdges(inputImage, sigma, lowThreshold, highThreshold);
         return detector.getEdgesImage();
@@ -174,7 +178,7 @@ public class SplitComicPanel {
         return true;
     }
 
-    private List<Row> mergeRows(List<Row> rowList) {
+    private List<Row> mergeRows(List<Row> rowList, int minimumHeight, int continuousRowsGap) {
         // Merge continuous small rows
         for (int i = rowList.size() - 1; i > 0; i--) {
             Row nextRow = rowList.get(i);
@@ -242,7 +246,7 @@ public class SplitComicPanel {
         }
     }
 
-    private void mergeCells(List<Row> rowList) {
+    private void mergeCells(List<Row> rowList, int minimumWidth) {
         for (Row row : rowList) {
             List<Cell> cellList = row.cellList;
             Cell firstCell = cellList.get(0);
@@ -268,8 +272,7 @@ public class SplitComicPanel {
         }
     }
 
-    private void createChildImages(String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList, String extension) throws Exception {
-        int cuttingFrame = 0;
+    private void createChildImages(String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList, String extension, String folder) throws Exception {
         for (int i = 0; i < rowList.size(); i++) {
             Row row = rowList.get(i);
             List<Cell> cellList = row.cellList;
@@ -291,10 +294,10 @@ public class SplitComicPanel {
                 int childHeight = endY - startY;
                 int childWidth = endX - startX;
                 BufferedImage childImage = image.getSubimage(
-                    startX + offset + cuttingFrame,
-                    startY + offset + cuttingFrame,
-                    childWidth - cuttingFrame * 2,
-                    childHeight - cuttingFrame * 2
+                    startX + offset,
+                    startY + offset,
+                    childWidth,
+                    childHeight
                 );
                 String newFileName = String.format("%s - %s.%s", originalFileName, String.format("%02d", i + 1), String.format("%02d", j + 1));
                 ImageIO.write(childImage, "jpg", new File(folder + newFileName + extension));

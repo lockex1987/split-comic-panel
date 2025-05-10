@@ -27,10 +27,10 @@ public class SplitComicPanel {
     }
 
     public void run() throws Exception {
-        String folder = "/home/lockex1987/new/05/";
+        String folder = "/home/lockex1987/new/04/";
         // Sometimes the cover is split in two, I want it's retained
-        // Start with page 2
-        for (int page = 2; page <= 60; page++) {
+        // Ignore the first page, start with page 2
+        for (int page = 3; page <= 3; page++) {
             String originalFileName = String.format("%03d", page);
             // webp format is not supported
             String extension = ".jpg";
@@ -38,7 +38,7 @@ public class SplitComicPanel {
             BufferedImage image = ImageIO.read(new File(folder + originalFileName + extension));
 
             // Adjust to get optimized values
-            int minimumHeight = Math.max(image.getHeight() / 10, 100);
+            int minimumHeight = Math.max(image.getHeight() / 7, 100);
             int minimumWidth = Math.max(image.getWidth() / 10, 200);
             int continuousRowsGap = 15;
 

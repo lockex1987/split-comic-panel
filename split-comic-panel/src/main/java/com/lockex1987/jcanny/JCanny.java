@@ -37,18 +37,17 @@ public class JCanny {
         tFract = fract;
 
         // More specific bounds checking later
-        if (image != null && numberDeviations > 0 && fract > 0) {
-            int[][] raw = ImageUtils.GSArray(image);
-            int[][] blurred = Gaussian.BlurGS(raw, GAUSSIAN_RADIUS, GAUSSIAN_INTENSITY);
-            gx = Sobel.Horizontal(blurred);  // Convolved with 3x3 horizontal Sobel mask
-            gy = Sobel.Vertical(blurred);    // Convolved with 3x3 vertical Sobel mask
 
-            Magnitude();    // Find the gradient magnitude at each pixel
-            Direction();    // Find the gradient direction at each pixel
-            Suppression();  // Using the direction and magnitude images, identify candidate points
+        int[][] raw = ImageUtils.GSArray(image);
+        int[][] blurred = Gaussian.BlurGS(raw, GAUSSIAN_RADIUS, GAUSSIAN_INTENSITY);
+        gx = Sobel.Horizontal(blurred);  // Convolved with 3x3 horizontal Sobel mask
+        gy = Sobel.Vertical(blurred);    // Convolved with 3x3 vertical Sobel mask
 
-            edges = ImageUtils.GSImg(Hysteresis());
-        }
+        Magnitude();    // Find the gradient magnitude at each pixel
+        Direction();    // Find the gradient direction at each pixel
+        Suppression();  // Using the direction and magnitude images, identify candidate points
+
+        edges = ImageUtils.GSImg(Hysteresis());
 
         return edges;
     }
@@ -65,7 +64,6 @@ public class JCanny {
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
                 mag[r][c] = Math.sqrt(gx[r][c] * gx[r][c] + gy[r][c] * gy[r][c]);
-
                 sum += mag[r][c];
             }
         }
@@ -169,7 +167,6 @@ public class JCanny {
         for (int r = 1; r < height; r++) {
             for (int c = 1; c < width; c++) {
                 double magnitude = mag[r][c];
-
                 if (magnitude >= tHi) {
                     bin[r - 1][c - 1] = 255;
                 } else if (magnitude < tLo) {
@@ -177,7 +174,6 @@ public class JCanny {
                 } else {
                     // This could be separate method or lambda
                     boolean connected = false;
-
                     for (int nr = -1; nr < 2; nr++) {
                         for (int nc = -1; nc < 2; nc++) {
                             if (mag[r + nr][c + nc] >= tHi) {
@@ -185,7 +181,6 @@ public class JCanny {
                             }
                         }
                     }
-
                     bin[r - 1][c - 1] = (connected) ? 255 : 0;
                 }
             }

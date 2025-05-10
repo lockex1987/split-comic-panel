@@ -38,38 +38,33 @@ public class Gaussian {
         double[] mask = new double[2 * rad + 1];
         int[][] outGS = new int[height - 2 * rad][width - 2 * rad];
 
-        //Create Gaussian kernel
+        // Create Gaussian kernel
         for (int x = -rad; x < rad + 1; x++) {
             double exp = Math.exp(-((x * x) / intensSquared2));
-
             mask[x + rad] = invIntensSqrPi * exp;
             norm += mask[x + rad];
         }
 
-        //Convolve image with kernel horizontally
+        // Convolve image with kernel horizontally
         for (int r = rad; r < height - rad; r++) {
             for (int c = rad; c < width - rad; c++) {
                 double sum = 0.;
-
                 for (int mr = -rad; mr < rad + 1; mr++) {
                     sum += (mask[mr + rad] * raw[r][c + mr]);
                 }
-
                 //Normalize channel after blur
                 sum /= norm;
                 outGS[r - rad][c - rad] = (int) Math.round(sum);
             }
         }
 
-        //Convolve image with kernel vertically
+        // Convolve image with kernel vertically
         for (int r = rad; r < height - rad; r++) {
             for (int c = rad; c < width - rad; c++) {
                 double sum = 0.;
-
                 for (int mr = -rad; mr < rad + 1; mr++) {
                     sum += (mask[mr + rad] * raw[r + mr][c]);
                 }
-
                 //Normalize channel after blur
                 sum /= norm;
                 outGS[r - rad][c - rad] = (int) Math.round(sum);

@@ -19,17 +19,15 @@ public class ImageUtils {
 
         if (height > 0 && width > 0) {
             gs = new int[height][width];
-
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
                     int bits = img.getRGB(j, i);
-                    //Not sure if precision is needed, but adding for now
+                    // Not sure if precision is needed, but adding for now
                     long avg = Math.round((((bits >> 16) & 0xff) + ((bits >> 8) & 0xff) + (bits & 0xff)) / 3.0);
                     gs[i][j] = (int) avg;
                 }
             }
         }
-
         return gs;
     }
 
@@ -138,8 +136,13 @@ public class ImageUtils {
                 int[] rgb = intRGB(img.getRGB(c, r));
                 double[] pixelHSI = new double[3];
                 double cos1 = rgb[0] - 0.5 * rgb[1] - 0.5 * rgb[2];
-                double cos2 = Math.sqrt(rgb[0] * rgb[0] + rgb[1] * rgb[1] + rgb[2] * rgb[2]
-                    - rgb[0] * rgb[1] - rgb[0] * rgb[2] - rgb[1] * rgb[2]);
+                double cos2 = Math.sqrt(rgb[0] * rgb[0] +
+                    rgb[1] * rgb[1] +
+                    rgb[2] * rgb[2] -
+                    rgb[0] * rgb[1] -
+                    rgb[0] * rgb[2] -
+                    rgb[1] * rgb[2]
+                );
 
                 pixelHSI[0] = Math.acos(cos1 / cos2) * piRad;
 
@@ -217,19 +220,15 @@ public class ImageUtils {
         }
 
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
                 int[] rgb = new int[3];
-
                 rgb[0] = (int) raw[r][c][0] * 255;
                 rgb[1] = (int) raw[r][c][1] * 255;
                 rgb[2] = (int) ((raw[r][c][2] / 360) * raw[r][c][2]);
-
                 img.setRGB(c, r, (rgb[0] << 16) | (rgb[1] << 8) | (rgb[2]));
             }
         }
-
         return img;
     }
 
@@ -251,19 +250,15 @@ public class ImageUtils {
         }
 
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
                 int[] rgb = new int[3];
-
                 rgb[0] = (int) raw[r][c][0] * 255;
                 rgb[1] = (int) raw[r][c][1] * 255;
                 rgb[2] = (int) ((raw[r][c][2] / 360) * raw[r][c][2]);
-
                 img.setRGB(c, r, (rgb[0] << 16) | (rgb[1] << 8) | (rgb[2]));
             }
         }
-
         return img;
     }
 

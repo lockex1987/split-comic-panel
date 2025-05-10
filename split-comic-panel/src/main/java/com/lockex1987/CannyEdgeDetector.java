@@ -121,11 +121,15 @@ public class CannyEdgeDetector {
                     }
                 }
 
-                float magnitude = (float) Math.sqrt(gradientXRed * gradientXRed + gradientYRed * gradientYRed +
-                    gradientXGreen * gradientXGreen + gradientYGreen * gradientYGreen +
-                    gradientXBlue * gradientXBlue + gradientYBlue * gradientYBlue) / 3f;
+                float magnitude = (float) Math.sqrt(gradientXRed * gradientXRed +
+                    gradientYRed * gradientYRed +
+                    gradientXGreen * gradientXGreen +
+                    gradientYGreen * gradientYGreen +
+                    gradientXBlue * gradientXBlue +
+                    gradientYBlue * gradientYBlue) / 3f;
                 gradientMagnitude[y][x] = magnitude;
-                gradientAngle[y][x] = (float) Math.toDegrees(Math.atan2(gradientYRed + gradientYGreen + gradientYBlue,
+                gradientAngle[y][x] = (float) Math.toDegrees(Math.atan2(
+                    gradientYRed + gradientYGreen + gradientYBlue,
                     gradientXRed + gradientXGreen + gradientXBlue));
                 if (gradientAngle[y][x] < 0) {
                     gradientAngle[y][x] += 360;

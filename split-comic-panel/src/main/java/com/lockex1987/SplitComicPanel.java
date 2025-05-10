@@ -20,8 +20,9 @@ public class SplitComicPanel {
     private final String folder = "/home/lockex1987/new/01/";
 
     // Adjust to get optimized values
-    private final int minimumHeight = 100;
     private final int minimumWidth = 300;
+    private final int minimumHeight = 100;
+    private final int continuousRowsGap = 15;
 
     // Parameters for Canny edge detection
     private final double sigma = 1.4;
@@ -36,9 +37,8 @@ public class SplitComicPanel {
         new SplitComicPanel().run();
     }
 
-    // TODO: Check again 17 (grayscale image has holes)
     public void run() throws Exception {
-        for (int page = 17; page <= 17; page++) {
+        for (int page = 50; page <= 50; page++) {
             String originalFileName = String.format("%03d", page);
             // webp format is not supported
             String extension = ".jpg";
@@ -83,6 +83,7 @@ public class SplitComicPanel {
         return grayscaleImage;
     }
 
+    // The grayscale image may have holes
     private BufferedImage detectEdgesOld(BufferedImage inputImage) {
         // https://en.wikipedia.org/wiki/Canny_edge_detector
         // https://github.com/rstreet85/JCanny
@@ -174,6 +175,20 @@ public class SplitComicPanel {
     }
 
     private List<Row> mergeRows(List<Row> rowList) {
+        // Merge continuous small rows
+        for (int i = rowList.size() - 1; i > 0; i--) {
+            Row nextRow = rowList.get(i);
+            Row previousRow = rowList.get(i - 1);
+            boolean bothAreSmall = nextRow.endY - nextRow.startY < minimumHeight
+                && previousRow.endY - previousRow.startY < minimumHeight;
+            boolean previousIsSmallAndConnectToNext = previousRow.endY - previousRow.startY < minimumHeight
+                && nextRow.startY - previousRow.endY < continuousRowsGap;
+            if (bothAreSmall || previousIsSmallAndConnectToNext) {
+                previousRow.endY = nextRow.endY;
+                rowList.remove(i);
+            }
+        }
+
         Row firstRow = rowList.get(0);
         List<Row> mergedRowList = new ArrayList<>();
         mergedRowList.add(firstRow);
@@ -254,11 +269,12 @@ public class SplitComicPanel {
     }
 
     private void createChildImages(String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList, String extension) throws Exception {
-        int count = 1;
         int cuttingFrame = 0;
-        for (Row row : rowList) {
+        for (int i = 0; i < rowList.size(); i++) {
+            Row row = rowList.get(i);
             List<Cell> cellList = row.cellList;
-            for (Cell cell : cellList) {
+            for (int j = 0; j < cellList.size(); j++) {
+                Cell cell = cellList.get(j);
                 int startY = row.startY;
                 int endY = row.endY;
                 int startX = cell.startX;
@@ -280,7 +296,8 @@ public class SplitComicPanel {
                     childWidth - cuttingFrame * 2,
                     childHeight - cuttingFrame * 2
                 );
-                ImageIO.write(childImage, "jpg", new File(folder + originalFileName + " - " + String.format("%02d", count++) + extension));
+                String newFileName = String.format("%s - %s.%s", originalFileName, String.format("%02d", i + 1), String.format("%02d", j + 1));
+                ImageIO.write(childImage, "jpg", new File(folder + newFileName + extension));
             }
         }
     }

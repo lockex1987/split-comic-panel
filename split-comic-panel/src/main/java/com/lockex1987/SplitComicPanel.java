@@ -17,6 +17,8 @@ public class SplitComicPanel {
 
     private static final int BACKGROUND_COLOR = -16777216;
 
+    private final CannyEdgeDetector detector = new CannyEdgeDetector();
+
     // With the old method for Canny edge detection, grayscale image is smaller than original image (offset = 9),
     // but with the new method, two images are equal
     // TODO: Remove
@@ -30,7 +32,7 @@ public class SplitComicPanel {
         String folder = "/home/lockex1987/new/04/";
         // Sometimes the cover is split in two, I want it's retained
         // Ignore the first page, start with page 2
-        for (int page = 3; page <= 3; page++) {
+        for (int page = 7; page <= 74; page++) {
             String originalFileName = String.format("%03d", page);
             // webp format is not supported
             String extension = ".jpg";
@@ -48,8 +50,9 @@ public class SplitComicPanel {
             // inspectColor();
 
             List<Row> rowList = splitIntoRows(grayscaleImage);
+            boolean isInfoPage = checkIsInfoPage(rowList, minimumHeight);
             rowList = mergeRows(rowList, minimumHeight, continuousRowsGap);
-            splitRowsIntoCells(grayscaleImage, rowList);
+            splitRowsIntoCells(grayscaleImage, rowList, isInfoPage);
             mergeCells(rowList, minimumWidth);
             createChildImages(originalFileName, image, grayscaleImage, rowList, extension, folder);
         }
@@ -97,8 +100,6 @@ public class SplitComicPanel {
         double sigma = 1.4;
         double lowThreshold = 10;
         double highThreshold = 30;
-
-        CannyEdgeDetector detector = new CannyEdgeDetector();
         detector.detectEdges(inputImage, sigma, lowThreshold, highThreshold);
         return detector.getEdgesImage();
     }
@@ -215,31 +216,46 @@ public class SplitComicPanel {
         return mergedRowList;
     }
 
-    private void splitRowsIntoCells(BufferedImage grayscaleImage, List<Row> rowList) {
+    private void splitRowsIntoCells(BufferedImage grayscaleImage, List<Row> rowList, boolean isInfoPage) {
         int grayscaleWidth = grayscaleImage.getWidth();
         for (Row row : rowList) {
             int startY = row.startY;
             int endY = row.endY;
 
-            int startX = 0;
-            while (startX < grayscaleWidth) {
+            if (!isInfoPage) {
+                int startX = 0;
+                while (startX < grayscaleWidth) {
+                    while (startX < grayscaleWidth && isBackgroundVertical(startX, startY, endY, grayscaleImage)) {
+                        startX++;
+                    }
+                    if (startX == grayscaleWidth) {
+                        break;
+                    }
+
+                    int endX = startX + 1;
+                    while (endX < grayscaleWidth && !isBackgroundVertical(endX, startY, endY, grayscaleImage)) {
+                        endX++;
+                    }
+
+                    Cell cell = new Cell(startX, endX);
+                    row.cellList.add(cell);
+
+                    startX = endX;
+                }
+            } else {
+                // Trim left and right
+                int startX = 0;
                 while (startX < grayscaleWidth && isBackgroundVertical(startX, startY, endY, grayscaleImage)) {
                     startX++;
                 }
-                if (startX == grayscaleWidth) {
-                    break;
+
+                int endX = grayscaleWidth;
+                while (endX > startX && isBackgroundVertical(endX - 1, startY, endY, grayscaleImage)) {
+                    endX--;
                 }
 
-                int endX = startX + 1;
-                while (endX < grayscaleWidth && !isBackgroundVertical(endX, startY, endY, grayscaleImage)) {
-                    endX++;
-                }
-
-                // System.out.println(startX + " -> " + endX + " / " + grayscaleWidth);
                 Cell cell = new Cell(startX, endX);
                 row.cellList.add(cell);
-
-                startX = endX;
             }
 
             // row.cellList.add(new Cell(0, grayscaleWidth));
@@ -303,5 +319,22 @@ public class SplitComicPanel {
                 ImageIO.write(childImage, "jpg", new File(folder + newFileName + extension));
             }
         }
+    }
+
+    private boolean checkIsInfoPage(List<Row> rowList, int minimumHeight) {
+        int totalRows = rowList.size();
+        if (totalRows > 7) {
+            return true;
+        }
+
+        // If total height of rows is much smaller the height of page
+
+        int numOfSmallRows = 0;
+        for (Row row : rowList) {
+            if (row.endY - row.startY < minimumHeight) {
+                numOfSmallRows++;
+            }
+        }
+        return ((double) numOfSmallRows) / totalRows > 0.7;
     }
 }

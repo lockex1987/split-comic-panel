@@ -15,10 +15,14 @@ public class CannyEdgeDetector {
     private boolean[][] thresholdedEdges;
     private boolean[][] finalEdges;
 
-    public void detectEdges(BufferedImage image, double sigma, double lowThreshold, double highThreshold) {
+    public void initGaussianKernel(double sigma) {
+        gaussianKernel = createGaussianKernel(sigma);
+    }
+
+    public void detectEdges(BufferedImage image, double lowThreshold, double highThreshold) {
         width = image.getWidth();
         height = image.getHeight();
-        gaussianKernel = createGaussianKernel(sigma);
+
         gradientMagnitude = new float[height][width];
         gradientAngle = new float[height][width];
         nonMaxSuppressed = new boolean[height][width];

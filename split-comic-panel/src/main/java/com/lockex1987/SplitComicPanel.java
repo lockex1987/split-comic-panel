@@ -22,17 +22,20 @@ public class SplitComicPanel {
     // With the old method for Canny edge detection, grayscale image is smaller than original image (offset = 9),
     // but with the new method, two images are equal
     // TODO: Remove
-    int offset = 0;
+    int offset = 9;
 
     public static void main(String[] args) throws Exception {
         new SplitComicPanel().run();
     }
 
     public void run() throws Exception {
-        String folder = "/home/lockex1987/new/04/";
+        double sigma = 1.4;
+        detector.initGaussianKernel(sigma);
+
+        String folder = "/home/lockex1987/new/02/";
         // Sometimes the cover is split in two, I want it's retained
         // Ignore the first page, start with page 2
-        for (int page = 7; page <= 74; page++) {
+        for (int page = 3; page <= 48; page++) {
             String originalFileName = String.format("%03d", page);
             // webp format is not supported
             String extension = ".jpg";
@@ -45,7 +48,8 @@ public class SplitComicPanel {
             int continuousRowsGap = 15;
 
             // BufferedImage grayscaleImage = makeGrayscale(image);
-            BufferedImage grayscaleImage = detectEdges(image);
+            BufferedImage grayscaleImage = detectEdgesOld(image);
+            // BufferedImage grayscaleImage = detectEdges(image);
             // ImageIO.write(grayscaleImage, "jpg", new File(folder + originalFileName + " - grayscale" + extension));
             // inspectColor();
 
@@ -84,23 +88,24 @@ public class SplitComicPanel {
     }
 
     // The grayscale image may have holes
+    // https://github.com/rstreet85/JCanny
     private BufferedImage detectEdgesOld(BufferedImage inputImage) {
-        // https://en.wikipedia.org/wiki/Canny_edge_detector
-        // https://github.com/rstreet85/JCanny
-        double CANNY_THRESHOLD_RATIO = .2; // Suggested range .2 - .4
-        int CANNY_STD_DEV = 1;             // Range 1-3
+        // Suggested range .2 - .4
+        double CANNY_THRESHOLD_RATIO = .2;
+        // Range 1-3
+        int CANNY_STD_DEV = 1;
         return JCanny.CannyEdges(inputImage, CANNY_STD_DEV, CANNY_THRESHOLD_RATIO);
     }
 
     // Code from Google Gemini
     // More accurate but run slower than the old method
+    // https://en.wikipedia.org/wiki/Canny_edge_detector
     // TODO: Tuning performance
     private BufferedImage detectEdges(BufferedImage inputImage) {
         // Parameters for Canny edge detection
-        double sigma = 1.4;
         double lowThreshold = 10;
         double highThreshold = 30;
-        detector.detectEdges(inputImage, sigma, lowThreshold, highThreshold);
+        detector.detectEdges(inputImage, lowThreshold, highThreshold);
         return detector.getEdgesImage();
     }
 
@@ -289,6 +294,14 @@ public class SplitComicPanel {
     }
 
     private void createChildImages(String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList, String extension, String folder) throws Exception {
+        int numOfCells = 0;
+        for (Row row : rowList) {
+            numOfCells += row.cellList.size();
+        }
+        if (numOfCells == 1) {
+            return;
+        }
+
         for (int i = 0; i < rowList.size(); i++) {
             Row row = rowList.get(i);
             List<Cell> cellList = row.cellList;

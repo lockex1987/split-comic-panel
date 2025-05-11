@@ -7,10 +7,10 @@ Split comic images.
 Các bước:
 
 - Sử dụng chương trình Python (OpenCV) hay PHP để tự động tách thành các frame.
-- Sử dụng trang web (JS) để [review](http://192.168.1.48/posts/project - comic split/review.html) lại.
+- Sử dụng trang web (JS) để [review](http://192.168.1.48/posts/project%20-%20comic%20split/review.html) lại.
 - Cắt các ảnh bằng PHP.
 
-[Viewer](http://192.168.1.48/posts/project - comic split/viewer.html)
+[Viewer](http://192.168.1.48/posts/project%20-%20comic%20split/viewer.html)
 
 Chia ảnh ra thành các panel (hàng, ô) nhỏ để dễ đọc trên các thiết bị như điện thoại di động.
 

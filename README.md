@@ -12,6 +12,8 @@ Các bước:
 
 [Viewer](http://192.168.1.48/posts/project%20-%20comic%20split/viewer.html)
 
+[Comic Viewer](http://192.168.1.48/posts/project%20-%20comic%20viewer/)
+
 Chia ảnh ra thành các panel (hàng, ô) nhỏ để dễ đọc trên các thiết bị như điện thoại di động.
 
 Xử lý ảnh thật là hay, có nhiều ý tưởng hữu ích: nhận dạng biển số, nhận dạng cháy, đọc số công tơ, phát hiện trộm,...
@@ -103,6 +105,20 @@ https://krita-artists.org/uploads/default/original/3X/7/f/7fdf1d0b0bd8ddd5125f54
 [Comic book panel segmentation • Max Halford](https://maxhalford.github.io/blog/comic-book-panel-segmentation/)
 
 
+
+[Justice League Action hesman tkkg](http://192.168.1.48/posts/story%20-%20comani%20list/)
+
+
+
+[Canny edge detector - Wikipedia](https://en.wikipedia.org/wiki/Canny_edge_detector)
+
+[Canny Edge Detection (math, no tutorial) - YouTube](https://www.youtube.com/watch?v=yDiScAD5w7E)
+
+[Canny - edge detection | Image Processing #8 | HBY coding academic - YouTube](https://www.youtube.com/watch?v=PtSgA19sC5g)
+
+[Thuật toán phát hiện cạnh Canny trong OpenCV | MC&TT Co., Ltd](https://mctt.vn/thuat-toan-phat-hien-canh-canny)
+
+[Tìm Biên Ảnh Dễ Dàng Với Bộ Lọc Canny | CodeLearn](https://codelearn.io/sharing/tim-bien-anh-de-dang-voi-bo-loc-canny)
 
 Mô tả:
 

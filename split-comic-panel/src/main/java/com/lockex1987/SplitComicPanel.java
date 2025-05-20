@@ -7,10 +7,13 @@ import com.lockex1987.jcanny.JCanny;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 public class SplitComicPanel {
@@ -33,19 +36,27 @@ public class SplitComicPanel {
         double sigma = 1.4;
         cannyEdgeDetector.initGaussianKernel(sigma);
 
-        String folder = "/home/lockex1987/new/02/";
+        // webp format is not supported
+        String extension = ".jpg";
+
+        String rootFolder = "/home/lockex1987/projects/lockex1987.github.io/posts/project - comic split/data/";
+        String subFolder = "01/";
+        String folder = rootFolder + subFolder;
+
+        List<String> newImageList = new ArrayList<>();
+        newImageList.add(subFolder + "001" + extension);
+
         // Sometimes the cover is split in two, I want it's retained
         // Ignore the first page, start with page 2
-        for (int page = 3; page <= 48; page++) {
+        // 20, 23, 28, 31, 49
+        for (int page = 2; page <= 50; page++) {
             String originalFileName = String.format("%03d", page);
-            // webp format is not supported
-            String extension = ".jpg";
             System.out.println("page: " + page + ", " + originalFileName);
             BufferedImage image = ImageIO.read(new File(folder + originalFileName + extension));
 
             // Adjust to get optimized values
-            int minimumHeight = Math.max(image.getHeight() / 7, 100);
-            int minimumWidth = Math.max(image.getWidth() / 10, 200);
+            int minimumHeight = Math.max(image.getHeight() / 6, 100);
+            int minimumWidth = Math.max(image.getWidth() / 7, 200);
             int continuousRowsGap = 15;
 
             // BufferedImage grayscaleImage = makeGrayscale(image);
@@ -59,8 +70,11 @@ public class SplitComicPanel {
             rowList = mergeRows(rowList, minimumHeight, continuousRowsGap);
             splitRowsIntoCells(grayscaleImage, rowList, isInfoPage);
             mergeCells(rowList, minimumWidth);
-            createChildImages(originalFileName, image, grayscaleImage, rowList, extension, folder, offset);
+            createChildImages(originalFileName, image, grayscaleImage, rowList, extension, rootFolder, subFolder, offset, newImageList);
         }
+
+        String textContent = newImageList.stream().collect(Collectors.joining("\n"));
+        Files.writeString(Paths.get(rootFolder + "image-list.txt"), textContent);
     }
 
     private BufferedImage makeGrayscale(BufferedImage image) {
@@ -296,13 +310,14 @@ public class SplitComicPanel {
 
     private void createChildImages(
         String originalFileName, BufferedImage image, BufferedImage grayscaleImage, List<Row> rowList, String extension,
-        String folder, int offset
+        String rootFolder, String subFolder, int offset, List<String> newImageList
     ) throws Exception {
         int numOfCells = 0;
         for (Row row : rowList) {
             numOfCells += row.cellList.size();
         }
         if (numOfCells == 1) {
+            newImageList.add(subFolder + originalFileName + extension);
             return;
         }
 
@@ -333,7 +348,8 @@ public class SplitComicPanel {
                     childHeight
                 );
                 String newFileName = String.format("%s - %s.%s", originalFileName, String.format("%02d", i + 1), String.format("%02d", j + 1));
-                ImageIO.write(childImage, "jpg", new File(folder + newFileName + extension));
+                ImageIO.write(childImage, "jpg", new File(rootFolder + subFolder + newFileName + extension));
+                newImageList.add(subFolder + newFileName + extension);
             }
         }
     }
